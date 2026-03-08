@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /root/new-api-feat-fix/web && npx vite build --logLevel error 2>&1 | tail -20)",
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' npx vite build --logLevel error 2>&1 | tail -20)",
+      "Bash(GOPROXY=https://goproxy.cn,direct go build ./... 2>&1)",
+      "Bash(GOPROXY=https://goproxy.cn,direct go vet ./... 2>&1)",
+      "Bash(cd /root/new-api-feat-fix/web && bun install 2>&1 | tail -5)",
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' bun run build 2>&1)",
+      "Bash(NODE_OPTIONS='--max-old-space-size=4096' bun run build 2>&1 | tail -20)",
+      "Bash(grep -n \"ApplyChannelUpstreamModelUpdates\\\\|ApplyAllChannelUpstreamModelUpdates\\\\|DetectChannelUpstreamModelUpdates\\\\|DetectAllChannelUpstreamModelUpdates\" /root/new-api-feat-fix/controller/*.go | head -20)",
+      "Bash(find /root/new-api-feat-fix/relay/channel/task -name \"*.go\" -exec grep -l \"Insert\\\\|Settle\\\\|LogTask\\\\|BillingContext\\\\|PrivateData\" {} \\\\; 2>/dev/null | head -10)",
+      "Bash(go build ./... 2>&1)",
+      "Bash(cd /root/new-api-feat-fix/web && NODE_OPTIONS='--max-old-space-size=4096' npx vite build 2>&1 | tail -20)",
+      "Bash(cd /root/new-api-feat-fix/web && NODE_OPTIONS='--max-old-space-size=4096' npx vite build 2>&1 | tail -5)",
+      "Bash(go vet ./... 2>&1)",
+      "Bash(GOCACHE=/tmp/go-cache go test -count=1 -v ./model/... 2>&1 | tail -30)",
+      "Bash(GOCACHE=/tmp/go-cache go test -count=1 -v ./relay/channel/... 2>&1 | tail -30)",
+      "Bash(GOCACHE=/tmp/go-cache go test -count=1 -v ./service/... 2>&1 | tail -30)"
+    ]
+  }
+}
