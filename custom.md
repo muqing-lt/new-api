@@ -1481,3 +1481,21 @@ if !needRecordIp {
 | `pages/Setting/Operation/SettingsLog.jsx` | +ForceRecordIpEnabled 开关 |
 | `pages/Setting/Operation/SettingsCreditLimit.jsx` | 替换为含返佣配置版 |
 
+
+## 分组监控与日志设置合并避坑指南 (v0.12.0)
+
+1. **分组监控菜单 403 错误（路由权限过高）**
+   新版合并时，如果前端页面（如 `/console/group-monitoring`）是供普通用户访问的，必须在 `web/src/App.jsx` 中用 `<PrivateRoute>` 包裹，而非 `<AdminRoute>`。否则普通用户访问时会被拦截并重定向到 `/forbidden` 页面。
+
+2. **强制记录 IP 设置不生效（布尔值变字符串）**
+   前端的 `OperationSetting.jsx` 初始 `inputs` 状态对象中必须显式声明所有布尔型配置的默认值（如 `ForceRecordIpEnabled: false`）。如果漏了，`getOptions()` 的 `typeof inputs[item.key] === 'boolean'` 检测会失效（变成 undefined），导致 API 返回的 `"true"` 被直接赋为**字符串**，从而使开关组件状态绑定失效，保存传参也变成字符串。
+
+3. **分组监控聚合定时器未启动（曲线变直线）**
+   新版代码合并时，不要忘记在 `main.go` 的启动流程中检查并添加后台 Goroutine 调用，例如：
+   ```go
+   go service.StartGroupMonitoringAggregation()
+   ```
+   如果遗漏，后台定时聚合任务将从未启动，`monitoring_histories` 表无新数据写入，导致前端折线图只会拉取到初始种子数据而显示为一条直线。
+
+4. **前端图表 `cache_hit_rate` 阈值 Bug（低命中率数据丢失）**
+   在渲染历史图表（如 `AvailabilityCacheChart.jsx` 和 `MiniHistoryChart.jsx`）时，检查阈值判断是否错误。原代码中 `cache_hit_rate >= 3` 会导致 0-2.99% 的命中率被当作无数据而忽略。正确的有效判断应为 `>= 0`。
