@@ -39,6 +39,8 @@ import InvitationCard from './InvitationCard';
 import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
 import TopupHistoryModal from './modals/TopupHistoryModal';
+import EditAffCodeModal from './modals/EditAffCodeModal';
+import InviteeListModal from './modals/InviteeListModal';
 
 const TopUp = () => {
   const { t } = useTranslation();
@@ -90,6 +92,17 @@ const TopUp = () => {
   const [affLink, setAffLink] = useState('');
   const [openTransfer, setOpenTransfer] = useState(false);
   const [transferAmount, setTransferAmount] = useState(0);
+  const [openEditAffCode, setOpenEditAffCode] = useState(false);
+  const [editAffCodeLoading, setEditAffCodeLoading] = useState(false);
+
+  // 邀请记录Modal状态
+  const [openInviteeModal, setOpenInviteeModal] = useState(false);
+
+  // 返佣 dashboard 和邀请记录状态
+  const [dashboardData, setDashboardData] = useState(null);
+  const [inviteeData, setInviteeData] = useState({ items: [], total: 0 });
+  const [inviteePage, setInviteePage] = useState(1);
+  const [inviteeLoading, setInviteeLoading] = useState(false);
 
   // 账单Modal状态
   const [openHistory, setOpenHistory] = useState(false);
@@ -575,6 +588,53 @@ const TopUp = () => {
     showSuccess(t('邀请链接已复制到剪切板'));
   };
 
+  // 获取返佣 dashboard
+  const getAffDashboard = async () => {
+    const res = await API.get('/api/user/aff/dashboard');
+    const { success, data } = res.data;
+    if (success) {
+      setDashboardData(data);
+    }
+  };
+
+  // 获取被邀请用户列表
+  const getAffInvitees = async (page) => {
+    setInviteeLoading(true);
+    const res = await API.get(`/api/user/aff/invitees?p=${page}&page_size=10`);
+    const { success, data } = res.data;
+    if (success) {
+      setInviteeData(data);
+    }
+    setInviteeLoading(false);
+  };
+
+  // 邀请记录翻页
+  const handleInviteePageChange = (page) => {
+    setInviteePage(page);
+    getAffInvitees(page);
+  };
+
+  // 更新邀请码
+  const updateAffCode = async (code) => {
+    setEditAffCodeLoading(true);
+    try {
+      const res = await API.put('/api/user/aff', { aff_code: code });
+      const { success, message, data } = res.data;
+      if (success) {
+        let link = `${window.location.origin}/register?aff=${data}`;
+        setAffLink(link);
+        setOpenEditAffCode(false);
+        showSuccess(t('邀请码更新成功'));
+      } else {
+        showError(message);
+      }
+    } catch (err) {
+      showError(t('请求失败'));
+    } finally {
+      setEditAffCodeLoading(false);
+    }
+  };
+
   // URL 参数自动打开账单弹窗（支付回跳时触发）
   useEffect(() => {
     if (searchParams.get('show_history') === 'true') {
@@ -594,6 +654,8 @@ const TopUp = () => {
     if (affFetchedRef.current) return;
     affFetchedRef.current = true;
     getAffLink().then();
+    getAffDashboard().then();
+    getAffInvitees(1).then();
   }, []);
 
   // 在 statusState 可用时获取充值信息
@@ -721,6 +783,22 @@ const TopUp = () => {
 
   return (
     <div className='w-full max-w-7xl mx-auto relative min-h-screen lg:min-h-0 mt-[60px] px-2'>
+      {/* 编辑邀请码模态框 */}
+      <EditAffCodeModal
+        t={t}
+        visible={openEditAffCode}
+        onOk={updateAffCode}
+        onCancel={() => setOpenEditAffCode(false)}
+        confirmLoading={editAffCodeLoading}
+      />
+
+      {/* 邀请记录模态框 */}
+      <InviteeListModal
+        visible={openInviteeModal}
+        onCancel={() => setOpenInviteeModal(false)}
+        t={t}
+      />
+
       {/* 划转模态框 */}
       <TransferModal
         t={t}
@@ -879,6 +957,15 @@ const TopUp = () => {
           setOpenTransfer={setOpenTransfer}
           affLink={affLink}
           handleAffLinkClick={handleAffLinkClick}
+          onEditAffCode={() => setOpenEditAffCode(true)}
+          inviteRewardDescription={
+            statusState?.status?.invite_reward_description
+          }
+          dashboardData={dashboardData}
+          inviteeData={inviteeData}
+          onInviteePageChange={handleInviteePageChange}
+          inviteeLoading={inviteeLoading}
+          onViewAll={() => setOpenInviteeModal(true)}
         />
       </div>
     </div>
