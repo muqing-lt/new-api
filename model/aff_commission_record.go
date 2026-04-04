@@ -254,7 +254,7 @@ func GetAdminAffUsers(keyword string, page int, pageSize int, sortField string, 
 		pageSize = 10
 	}
 
-	query := DB.Model(&User{}).Where("aff_count > 0 OR inviter_id > 0")
+	query := DB.Model(&User{}).Where("aff_count > 0 OR inviter_id > 0 OR aff_history > 0 OR aff_quota > 0")
 	if keyword != "" {
 		query = query.Where("username LIKE ? OR aff_code LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
 	}
