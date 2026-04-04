@@ -15,6 +15,7 @@ const InvitationTable = ({
   userCount,
   handlePageChange,
   handlePageSizeChange,
+  handleSortChange,
   openInviteeModal,
   openRecordModal,
   t,
@@ -40,6 +41,11 @@ const InvitationTable = ({
       }}
       hidePagination={true}
       loading={loading}
+      onChange={({ sorter }) => {
+        if (sorter && handleSortChange) {
+          handleSortChange(sorter.dataIndex, sorter.sortOrder);
+        }
+      }}
       empty={
         <Empty
           image={<IllustrationNoResult style={{ width: 150, height: 150 }} />}

@@ -246,7 +246,7 @@ type AdminAffInviteeItem struct {
 }
 
 // GetAdminAffUsers 管理员查询有邀请关系的用户列表（带搜索）
-func GetAdminAffUsers(keyword string, page int, pageSize int) ([]AdminAffUserItem, int64, error) {
+func GetAdminAffUsers(keyword string, page int, pageSize int, sortField string, sortOrder string) ([]AdminAffUserItem, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -275,8 +275,23 @@ func GetAdminAffUsers(keyword string, page int, pageSize int) ([]AdminAffUserIte
 	}
 	var rows []userRow
 	offset := (page - 1) * pageSize
+	// 排序白名单
+	allowedSortFields := map[string]string{
+		"id":                "id",
+		"aff_count":         "aff_count",
+		"aff_quota":         "aff_quota",
+		"aff_history_quota": "aff_history",
+	}
+	orderClause := "aff_count DESC, id DESC"
+	if col, ok := allowedSortFields[sortField]; ok {
+		dir := "DESC"
+		if sortOrder == "asc" {
+			dir = "ASC"
+		}
+		orderClause = col + " " + dir + ", id DESC"
+	}
 	if err := query.Select("id, username, aff_code, aff_count, aff_quota, aff_history, inviter_id").
-		Order("aff_count DESC, id DESC").
+		Order(orderClause).
 		Offset(offset).Limit(pageSize).
 		Find(&rows).Error; err != nil {
 		return nil, 0, err

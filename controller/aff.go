@@ -34,8 +34,10 @@ func GetAffInvitees(c *gin.Context) {
 // AdminGetAffUsers 管理员查看所有有邀请关系的用户
 func AdminGetAffUsers(c *gin.Context) {
 	keyword := c.Query("keyword")
+	sortField := c.Query("sort")
+	sortOrder := c.Query("order")
 	pageInfo := common.GetPageQuery(c)
-	items, total, err := model.GetAdminAffUsers(keyword, pageInfo.Page, pageInfo.PageSize)
+	items, total, err := model.GetAdminAffUsers(keyword, pageInfo.Page, pageInfo.PageSize, sortField, sortOrder)
 	if err != nil {
 		common.ApiError(c, err)
 		return

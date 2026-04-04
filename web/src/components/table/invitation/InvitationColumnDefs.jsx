@@ -4,12 +4,17 @@ import { renderQuota, renderNumber } from '../../../helpers';
 
 const { Paragraph } = Typography;
 
-export const getInvitationColumns = ({ t, openInviteeModal, openRecordModal }) => {
+export const getInvitationColumns = ({
+  t,
+  openInviteeModal,
+  openRecordModal,
+}) => {
   return [
     {
       title: 'ID',
       dataIndex: 'id',
       width: 70,
+      sorter: true,
     },
     {
       title: t('用户名'),
@@ -39,6 +44,7 @@ export const getInvitationColumns = ({ t, openInviteeModal, openRecordModal }) =
     {
       title: t('邀请人数'),
       dataIndex: 'aff_count',
+      sorter: true,
       render: (text) => (
         <Tag color='cyan' shape='circle'>
           {renderNumber(text)}
@@ -48,6 +54,7 @@ export const getInvitationColumns = ({ t, openInviteeModal, openRecordModal }) =
     {
       title: t('待提取收益'),
       dataIndex: 'aff_quota',
+      sorter: true,
       render: (text) => (
         <Tag color='green' shape='circle'>
           {renderQuota(text)}
@@ -57,6 +64,7 @@ export const getInvitationColumns = ({ t, openInviteeModal, openRecordModal }) =
     {
       title: t('累计收益'),
       dataIndex: 'aff_history_quota',
+      sorter: true,
       render: (text) => (
         <Tag color='orange' shape='circle'>
           {renderQuota(text)}
