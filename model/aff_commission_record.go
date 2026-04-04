@@ -256,7 +256,8 @@ func GetAdminAffUsers(keyword string, page int, pageSize int, sortField string, 
 
 	query := DB.Model(&User{}).Where("aff_count > 0 OR inviter_id > 0 OR aff_history > 0 OR aff_quota > 0")
 	if keyword != "" {
-		query = query.Where("username LIKE ? OR aff_code LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+		escaped := strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(keyword)
+		query = query.Where("username LIKE ? OR aff_code LIKE ?", "%"+escaped+"%", "%"+escaped+"%")
 	}
 
 	var total int64
@@ -298,7 +299,7 @@ func GetAdminAffUsers(keyword string, page int, pageSize int, sortField string, 
 	}
 
 	// 收集所有 inviter_id 批量查用户名
-	inviterIds := make([]int, 0)
+	inviterIds := make([]int, 0, len(rows))
 	for _, r := range rows {
 		if r.InviterId > 0 {
 			inviterIds = append(inviterIds, r.InviterId)
@@ -311,7 +312,9 @@ func GetAdminAffUsers(keyword string, page int, pageSize int, sortField string, 
 			Username string
 		}
 		var names []nameRow
-		DB.Model(&User{}).Select("id, username").Where("id IN ?", inviterIds).Find(&names)
+		if err := DB.Model(&User{}).Select("id, username").Where("id IN ?", inviterIds).Find(&names).Error; err != nil {
+			common.SysError("failed to query inviter names: " + err.Error())
+		}
 		for _, n := range names {
 			inviterNameMap[n.Id] = n.Username
 		}

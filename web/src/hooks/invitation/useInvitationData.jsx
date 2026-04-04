@@ -21,30 +21,45 @@ export const useInvitationData = () => {
   const [selectedUser, setSelectedUser] = useState(null);
 
   // 用 ref 保存最新状态，供 interval 回调使用
-  const stateRef = useRef({ activePage: 1, pageSize: ITEMS_PER_PAGE, searchKeyword: '', sortField: '', sortOrder: '' });
-  stateRef.current = { activePage, pageSize, searchKeyword, sortField, sortOrder };
+  const stateRef = useRef({
+    activePage: 1,
+    pageSize: ITEMS_PER_PAGE,
+    searchKeyword: '',
+    sortField: '',
+    sortOrder: '',
+  });
+  stateRef.current = {
+    activePage,
+    pageSize,
+    searchKeyword,
+    sortField,
+    sortOrder,
+  };
 
-  const loadUsers = useCallback(async (page, size, keyword = '', sort = '', order = '') => {
-    setLoading(true);
-    let url = `/api/user/aff/list?p=${page}&page_size=${size}`;
-    if (keyword) {
-      url += `&keyword=${encodeURIComponent(keyword)}`;
-    }
-    if (sort) {
-      url += `&sort=${encodeURIComponent(sort)}&order=${encodeURIComponent(order)}`;
-    }
-    const res = await API.get(url);
-    const { success, message, data } = res.data;
-    if (success) {
-      const items = data.items || [];
-      setUsers(items.map((u) => ({ ...u, key: u.id })));
-      setActivePage(data.page);
-      setUserCount(data.total);
-    } else {
-      showError(message);
-    }
-    setLoading(false);
-  }, []);
+  const loadUsers = useCallback(
+    async (page, size, keyword = '', sort = '', order = '') => {
+      setLoading(true);
+      let url = `/api/user/aff/list?p=${page}&page_size=${size}`;
+      if (keyword) {
+        url += `&keyword=${encodeURIComponent(keyword)}`;
+      }
+      if (sort) {
+        url += `&sort=${encodeURIComponent(sort)}&order=${encodeURIComponent(order)}`;
+      }
+      const res = await API.get(url);
+      const { success, message, data } = res.data;
+      if (success) {
+        const items = data.items || [];
+        setUsers(items.map((u) => ({ ...u, key: u.id })));
+        setActivePage(data.page);
+        setUserCount(data.total);
+      } else {
+        showError(message);
+      }
+      setLoading(false);
+    },
+    [],
+  );
 
   const handleSearch = (keyword) => {
     setSearchKeyword(keyword);
@@ -67,7 +82,8 @@ export const useInvitationData = () => {
   const handleSortChange = (sortKey, order) => {
     // Semi Design Table: order 为 'ascend' / 'descend' / false
     const newField = order ? sortKey : '';
-    const newOrder = order === 'ascend' ? 'asc' : order === 'descend' ? 'desc' : '';
+    const newOrder =
+      order === 'ascend' ? 'asc' : order === 'descend' ? 'desc' : '';
     setSortField(newField);
     setSortOrder(newOrder);
     setActivePage(1);
@@ -89,14 +105,20 @@ export const useInvitationData = () => {
   };
 
   useEffect(() => {
-    loadUsers(1, pageSize);
+    loadUsers(1, stateRef.current.pageSize);
     // 每 60 秒自动刷新
     const interval = setInterval(() => {
       const s = stateRef.current;
-      loadUsers(s.activePage, s.pageSize, s.searchKeyword, s.sortField, s.sortOrder);
+      loadUsers(
+        s.activePage,
+        s.pageSize,
+        s.searchKeyword,
+        s.sortField,
+        s.sortOrder,
+      );
     }, 60000);
     return () => clearInterval(interval);
-  }, [loadUsers, pageSize]);
+  }, [loadUsers]);
 
   return {
     users,
